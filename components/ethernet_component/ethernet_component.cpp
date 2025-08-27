@@ -33,7 +33,7 @@ namespace ethernet_component {
 #endif
 #endif
 
-static const char *const TAG = "ethernet";
+static const char *const TAG = "ethernet_component";
 
 EthernetComponent *global_eth_component;  // NOLINT(cppcoreguidelines-avoid-non-const-global-variables)
 
