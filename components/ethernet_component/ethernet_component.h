@@ -14,7 +14,7 @@
 #include "esp_idf_version.h"
 
 namespace esphome {
-namespace ethernet {
+namespace ethernet_component {
 
 enum EthernetType : uint8_t {
   ETHERNET_TYPE_UNKNOWN = 0,
