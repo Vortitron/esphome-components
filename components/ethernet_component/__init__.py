@@ -46,7 +46,7 @@ DEPENDENCIES = ["esp32"]
 AUTO_LOAD = ["network"]
 LOGGER = logging.getLogger(__name__)
 
-ethernet_ns = cg.esphome_ns.namespace("ethernet")
+ethernet_ns = cg.esphome_ns.namespace("ethernet_component")
 PHYRegister = ethernet_ns.struct("PHYRegister")
 CONF_PHY_ADDR = "phy_addr"
 CONF_MDC_PIN = "mdc_pin"
