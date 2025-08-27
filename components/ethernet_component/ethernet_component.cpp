@@ -15,7 +15,7 @@
 #endif
 
 namespace esphome {
-namespace ethernet {
+namespace ethernet_component {
 
 #if ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 2)
 // work around IDF compile issue on P4 https://github.com/espressif/esp-idf/pull/15637
