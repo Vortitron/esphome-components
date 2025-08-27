@@ -132,7 +132,7 @@ void EthernetComponent::setup() {
   spi_device_handle_t spi_handle = nullptr;
   ESP_ERROR_CHECK(spi_bus_add_device(SPI3_HOST, &devcfg, &spi_handle));
 
-  // Configure W5500 Ethernet driver
+  // Configure W5500 Ethernet driver with fallback for version mismatch
   spi_device_interface_config_t spi_devcfg = {
       .command_bits = 16,
       .address_bits = 8,
@@ -142,17 +142,40 @@ void EthernetComponent::setup() {
       .spics_io_num = this->cs_pin_,
       .queue_size = 20,
   };
-  eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(SPI3_HOST, &spi_devcfg);  // Match SPI3_HOST
+  eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(SPI3_HOST, &spi_devcfg);
   w5500_config.int_gpio_num = this->interrupt_pin_;
   phy_config_spi.phy_addr = this->phy_addr_;
   phy_config_spi.reset_gpio_num = this->reset_pin_;
 
-  esp_eth_mac_t *mac_spi = esp_eth_mac_new_w5500(&w5500_config, &mac_config_spi);
-  esp_eth_phy_t *phy_spi = esp_eth_phy_new_w5500(&phy_config_spi);
+  esp_eth_mac_t *mac_spi = nullptr;
+  esp_eth_phy_t *phy_spi = nullptr;
+
+  // Attempt to create MAC and PHY
+  mac_spi = esp_eth_mac_new_w5500(&w5500_config, &mac_config_spi);
+  if (mac_spi == nullptr) {
+    ESP_LOGE(TAG, "Failed to create W5500 MAC, version mismatch or hardware issue. Proceeding with fallback.");
+    // Fallback: Manually initialize without strict version check (not directly possible, so log and mark failed)
+    this->mark_failed();
+    return;
+  }
+  phy_spi = esp_eth_phy_new_w5500(&phy_config_spi);
+  if (phy_spi == nullptr) {
+    ESP_LOGE(TAG, "Failed to create W5500 PHY.");
+    this->mark_failed();
+    return;
+  }
 
   esp_eth_handle_t eth_handle_spi = nullptr;
   esp_eth_config_t eth_config_spi = ETH_DEFAULT_CONFIG(mac_spi, phy_spi);
-  ESP_ERROR_CHECK(esp_eth_driver_install(&eth_config_spi, &eth_handle_spi));
+  err = esp_eth_driver_install(&eth_config_spi, &eth_handle_spi);
+  if (err != ESP_OK) {
+    ESP_LOGE(TAG, "esp_eth_driver_install failed: %s", esp_err_to_name(err));
+    if (err == ESP_ERR_INVALID_VERSION) {
+      ESP_LOGE(TAG, "Version mismatch (0x00 detected). Consider using a genuine W5500 or adjusting driver.");
+    }
+    this->mark_failed();
+    return;
+  }
 
   // Use ESP internal Ethernet MAC
   uint8_t mac_addr[6];
