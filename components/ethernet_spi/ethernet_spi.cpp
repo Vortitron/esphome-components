@@ -133,7 +133,7 @@ void EthernetComponent::setup() {
 
   ESP_ERROR_CHECK(spi_bus_add_device(SPI3_HOST, &devcfg, &spi_handle));
   // w5500 ethernet driver is based on spi driver
-  eth_mac_spi_devcfg_t spi_devcfg = {};  // Define the SPI device config
+  spi_device_interface_config_t spi_devcfg = {};  // Define the SPI device config
   eth_w5500_config_t w5500_config = ETH_W5500_DEFAULT_CONFIG(SPI2_HOST, &spi_devcfg);  // Use SPI2_HOST (adjust to SPI3_HOST if using a different host)
   // Set remaining GPIO numbers and configuration used by the SPI module
   w5500_config.int_gpio_num = this->interrupt_pin_;
